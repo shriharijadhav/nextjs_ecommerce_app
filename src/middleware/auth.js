@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 async function checkIfUserIsLoggedIn(req, accessToken, refreshToken) {
     try {
         // Log the start time
-        // await dbConnect();
+        await dbConnect();
 
         const decodedRefreshToken_demo = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
         const userId_temp = decodedRefreshToken_demo?.userId;

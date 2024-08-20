@@ -67,15 +67,24 @@ export const POST = async (req) => {
             ordersPlaced
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             message:'login successful',
             isLoginSuccessful:true,
             // email,password
             userData,
-            
-            accessToken,
-            refreshToken
         })
+
+       
+
+        response.cookies.set('access-token', accessToken,{
+            httpOnly: true,
+        })
+        response.cookies.set('refresh-token', refreshToken,{
+            httpOnly: true,
+        })
+
+
+        return response
      
     } catch (error) {
         return NextResponse.json({

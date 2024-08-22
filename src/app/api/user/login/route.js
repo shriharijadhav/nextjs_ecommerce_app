@@ -38,7 +38,7 @@ export const POST = async (req) => {
 
         //  check if password from request matches the hashed password in database
         if (!bcrypt.compareSync(password, userFromDB.password)) {
-            return NextResponse.status(200).json({
+            return NextResponse.json({
                 message:'Password is not matching',
                 isPasswordNotMatching:true,
                 isLoginSuccessful:false
@@ -76,12 +76,8 @@ export const POST = async (req) => {
 
        
 
-        response.cookies.set('access-token', accessToken,{
-            httpOnly: true,
-        })
-        response.cookies.set('refresh-token', refreshToken,{
-            httpOnly: true,
-        })
+        response.cookies.set('access-token', accessToken,{ httpOnly: true,})
+        response.cookies.set('refresh-token', refreshToken,{ httpOnly: true,})
 
 
         return response

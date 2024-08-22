@@ -1,16 +1,23 @@
 "use client"
 
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Flex, Text, Input, Button, Box, FormControl, FormLabel, useToast, Spinner } from '@chakra-ui/react';
-
+import { useRouter } from 'next/navigation';
+ 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
   const toast = useToast();
+  const router = useRouter();
+
+ 
+
 
   const handleSubmit = async () => {
+
     setIsLoading(true);
 
     try {
@@ -24,14 +31,10 @@ export default function Home() {
 
       const data = await response.json();
 
+       setUserData({...data.userData,isUserLoggedIn: true});
+
       if (data.isLoginSuccessful) {
-        toast({
-          title: 'Login Successful',
-          description: 'You have logged in successfully!',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
+       
       } else {
         toast({
           title: 'Login Failed',
@@ -54,6 +57,18 @@ export default function Home() {
     }
   };
 
+
+  useEffect(() => {
+    if (userData) {
+      
+      router.push('/home');
+    }
+    console.log('userData', userData);
+
+  
+  }, [userData, router]);
+
+ 
   return (
     <Flex w={'100%'} h={'100vh'}  justifyContent={'center'} alignItems={'center'}>
       <Box p={8} bg={'gray.500'} borderRadius={'md'} boxShadow={'md'}>

@@ -12,7 +12,7 @@ export const  POST = async (req)=> {
    
     try{
 
-        const {firstName,lastName,email,password,contact} = await  req.json();
+        const {firstName,lastName,email,password,contact} = await req.json();
 
         // is null check
         if(!firstName || !lastName || !email || !password || !contact) {
@@ -41,8 +41,7 @@ export const  POST = async (req)=> {
             lastName:lastName,
             email:email,
             password:hashedPassword,
-            contact:contact
-            
+            contact:contact     
         })
 
         const cartCreated = await cartModel.create({user:savedUser._id})
@@ -65,7 +64,6 @@ export const  POST = async (req)=> {
         return NextResponse.json({
             error: 'Failed to sign up user. Please try again',
             isSignupSuccess:false,
-
         });
     }
 }

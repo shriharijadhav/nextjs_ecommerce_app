@@ -13,12 +13,12 @@ export const POST = async (req)=> {
 
     const reqBody = await req.json();
 
-    // const accessToken = req.headers.get('access-token');
-    // const refreshToken = req.headers.get('refresh-token');
+    const accessToken = req.headers.get('access-token');
+    const refreshToken = req.headers.get('refresh-token');
 
      // Get cookies from the request
-     const accessToken = req.cookies.get('access-token')?.value;
-     const refreshToken = req.cookies.get('refresh-token')?.value;
+    //  const accessToken = req.cookies.get('access-token')?.value;
+    //  const refreshToken = req.cookies.get('refresh-token')?.value;
 
     if (!accessToken || !refreshToken) {
         return NextResponse.json({

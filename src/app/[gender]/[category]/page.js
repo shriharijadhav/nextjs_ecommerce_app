@@ -11,14 +11,28 @@ export default function Category({ params }) {
 
     const [categoryData,SetCategoryData] = useState(null);
 
+    function formatString(input) {
+      // Replace '%20' with a space
+      const decodedString = input.replace(/%20/g, ' ');
+  
+      // Capitalize the first letter of each word
+      const formattedString = decodedString
+          .toLowerCase()
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+  
+      return formattedString;
+  }
+    let gender_value = formatString(gender)
+    let category_value = formatString(category)
+
     const fetchProducts = async () => {
         try {
           const response = await axios.post(
             'http://localhost:3000/api/product/getPageWiseProduct',
             {
               // Request body data
-              gender: "Women",
-              category: "Dresses"
+              gender: gender_value,
+              category: category_value
             },
            
           );
@@ -35,7 +49,7 @@ export default function Category({ params }) {
       
          fetchProducts(gender,category)
       
-    }, [])
+    }, [gender,category])
     
 
     return (

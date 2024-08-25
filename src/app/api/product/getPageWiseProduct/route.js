@@ -1,32 +1,14 @@
-import checkIfUserIsLoggedIn from '@/middleware/auth';
-import productModel from '@/model/productModel';
+import dbConnect from '@/config/dbConnect';
+ import productModel from '@/model/productModel';
 import { NextResponse } from 'next/server';
  
 export const POST = async (req)=> {
 
+    await dbConnect();
+
     const reqBody = await req.json();
 
-    // const accessToken = req.headers.get('access-token');
-    // const refreshToken = req.headers.get('refresh-token');
 
-    // if (!accessToken || !refreshToken) {
-    //     return NextResponse.json({
-    //         message: 'Tokens missing',
-    //         redirectUserToLogin: true,
-    //         isProductQuantityIncreased: false,
-    //     });
-    // }
-
-    // const isLoggedIn = await checkIfUserIsLoggedIn(reqBody, accessToken, refreshToken);
-    // if (!isLoggedIn) {
-    //     return  NextResponse.json({
-    //         newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
-    //         message: 'Session timeout. Refresh token expired',
-    //         isRefreshTokenExpired: true,
-    //         redirectUserToLogin: true,
-    //         isProductQuantityDecreased: false,
-    //     });
-    // }
 
    
 
@@ -43,6 +25,8 @@ export const POST = async (req)=> {
         if (category) {
             query.category = category;
         }
+
+        console.log(gender, category)
 
         // Fetch products with pagination and filters
          const products = await productModel.find({gender: gender, category: category})

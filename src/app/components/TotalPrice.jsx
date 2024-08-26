@@ -4,9 +4,9 @@ import { Flex, Text } from "@chakra-ui/react"
 
 export const TotalPrice = ({products})=>{
 
-    console.log(products[0]) 
+    // console.log(products[0]) 
     const total = products?.reduce((total,item)=>total + (Number(item.quantity)*Number(item.price)),0)
-    console.log(total) 
+    // console.log(total) 
 
     return(
     <Flex>

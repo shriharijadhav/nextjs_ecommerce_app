@@ -1,9 +1,9 @@
 "use client";
 
+import { useSessionTimeoutModal } from "@/hooks/useSessionTimeoutModal";
 import { Box, Image, Badge, Text, Flex, Button, Stack, HStack, VStack, useToast, Spinner } from "@chakra-ui/react";
-import axios from "axios";
 import { useEffect, useState } from "react";
-
+ 
 export default function ProductDetailCard({ params }) {
     const [product, setProduct] = useState(null);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -13,10 +13,29 @@ export default function ProductDetailCard({ params }) {
     const { landingPageUrl } = params;
     const formattedUrl = landingPageUrl.join('/');
 
-    const fetchSingleProductData = async (formattedUrl) => {
+    // Create hooks with endpoints
+    const fetchProductData = useSessionTimeoutModal(
+        'http://localhost:3000/api/product/getSingleProductDetails',
+        'POST',
+        { landingPageUrl: formattedUrl }
+    );
+
+    const addProductToCart = useSessionTimeoutModal(
+        'http://localhost:3000/api/user/cart/addProductToCart',
+        'POST',
+        { productFromRequest: product },
+        {
+            'access-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM1OWEzZjRiMTY5ZWQ0N2EzMGY4ZmYiLCJpYXQiOjE3MjQyMjc4ODQsImV4cCI6MTcyNDMxNDI4NH0.rWONWUxFktAEy86dZ7zKQhz01cPQIAkShbK0u3eoEr8',
+            'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM1OWEzZjRiMTY5ZWQ0N2EzMGY4ZmYiLCJpYXQiOjE3MjQyMjc4ODQsImV4cCI6MTcyNDMxNDI4NH0.rWONWUxFktAEy86dZ7zKQhz01cPQIAkShbK0u3eoEr8'
+        }
+    );
+
+    const fetchSingleProductData = async () => {
         try {
-            const response = await axios.post('http://localhost:3000/api/product/getSingleProductDetails', { landingPageUrl: formattedUrl });
-            setProduct(response.data.product);
+            const data = await fetchProductData();
+            if (data) {
+                setProduct(data.product);
+            }
         } catch (error) {
             toast({
                 title: "Error!",
@@ -30,16 +49,11 @@ export default function ProductDetailCard({ params }) {
         }
     };
 
-    const addProductToCart = async (product) => {
+    const handleAddToCart = async (product) => {
         setIsAddingToCart(true);
         try {
-            const response = await axios.post('http://localhost:3000/api/user/cart/addProductToCart', { productFromRequest: product }, {
-                headers: {
-                    'access-token': 'your-access-token',
-                    'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODNhYWVlZWU5YzI0ZDZkNmNhNGQiLCJpYXQiOjE3MjQ1NTkzNTEsImV4cCI6MTcyNDY0NTc1MX0.kMA0kIcL-AouHub5DM5Xkrr534i7CE0zENH9cqc1RnE'
-                }
-            });
-            if (response.data.isProductAddedToCart) {
+            const data = await addProductToCart({ productFromRequest: product });
+            if (data?.isProductAddedToCart) {
                 toast({
                     title: "Success!",
                     description: "Product added to cart.",
@@ -70,7 +84,7 @@ export default function ProductDetailCard({ params }) {
     };
 
     useEffect(() => {
-        fetchSingleProductData(formattedUrl);
+        fetchSingleProductData();
     }, [formattedUrl]);
 
     if (loading) {
@@ -131,7 +145,7 @@ export default function ProductDetailCard({ params }) {
                     colorScheme="purple"
                     size="lg"
                     mt={6}
-                    onClick={() => addProductToCart(product)}
+                    onClick={() => handleAddToCart(product)}
                     isLoading={isAddingToCart}
                 >
                     Add to Cart

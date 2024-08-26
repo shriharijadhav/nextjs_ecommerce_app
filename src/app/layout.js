@@ -1,6 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ChakraProvider, Text } from '@chakra-ui/react';
+ import SessionTimeoutModal from "./components/SessionTimeoutModal";
+import { SessionTimeoutProvider } from "@/context/SessionTimeoutContext";
  
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,10 +14,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body   className={inter.className}>
-      <Text>Header</Text>
-       <ChakraProvider>{children}</ChakraProvider>
-       <Text>footer</Text>
+      <body className={inter.className}>
+        <ChakraProvider>
+          <SessionTimeoutProvider>
+            <Text>Header</Text>
+            {children}
+            <SessionTimeoutModal />
+            <Text>Footer</Text>
+          </SessionTimeoutProvider>
+        </ChakraProvider>
       </body>
     </html>
   );

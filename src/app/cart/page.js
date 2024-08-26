@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Grid, Image, Flex, Text, Button, IconButton, useToast } from "@chakra-ui/react";
+import { Box, Grid, Image, Flex, Text, Button, IconButton, useToast, Spinner } from "@chakra-ui/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
@@ -23,12 +23,12 @@ export default function CartPage() {
           'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODNhYWVlZWU5YzI0ZDZkNmNhNGQiLCJpYXQiOjE3MjQ1NzY1ODMsImV4cCI6MTcyNDY2Mjk4M30.fL-Znfd8v1NzXorFW4zIx-DNNEsyH6q-cG3Hihvyvqo'
         }
       });
-      console.log(response.data)
+      // console.log(response.data)
       setProducts(response.data.cartData.allProductsInCart);
       setIsCartUpdated(false);
       return true
     } catch (error) {
-      console.log('Error: ' + error.message);
+      // console.log('Error: ' + error.message);
       return false;
     }
 
@@ -44,7 +44,7 @@ export default function CartPage() {
           'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODNhYWVlZWU5YzI0ZDZkNmNhNGQiLCJpYXQiOjE3MjQ1NzY1ODMsImV4cCI6MTcyNDY2Mjk4M30.fL-Znfd8v1NzXorFW4zIx-DNNEsyH6q-cG3Hihvyvqo'
         }
       });
-      console.log(response.data)
+      // console.log(response.data)
       if (response.data.isProductQuantityIncreased) {
         const flag = await fetchCartData()
         if(flag){
@@ -99,7 +99,7 @@ export default function CartPage() {
           'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODNhYWVlZWU5YzI0ZDZkNmNhNGQiLCJpYXQiOjE3MjQ1NzY1ODMsImV4cCI6MTcyNDY2Mjk4M30.fL-Znfd8v1NzXorFW4zIx-DNNEsyH6q-cG3Hihvyvqo'
         }
       });
-      console.log(response.data)
+      // console.log(response.data)
       if (response.data.isProductQuantityDecreased) {
         const flag = await fetchCartData()
         if(flag){
@@ -156,8 +156,13 @@ export default function CartPage() {
   }, []);
 
   if (!products) {
-    return <Text>Fetching cart...</Text>;
-  }
+    return (
+        <Flex direction="column" align="center" justify="center" height="100vh">
+            <Spinner size="xl" color="purple.500" />
+            <Text mt={4} fontSize="lg" color="gray.500">Fetching cart details...</Text>
+        </Flex>
+    );
+}
 
   return (
     <Box p={4}>

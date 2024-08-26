@@ -1,9 +1,8 @@
-// components/SessionTimeoutModal.js
-"use client"
+"use client";
 import { useSessionTimeout } from "@/context/SessionTimeoutContext";
-import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Text } from "@chakra-ui/react";
+import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Text, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
- 
+
 export default function SessionTimeoutModal() {
   const { isModalOpen, closeModal } = useSessionTimeout();
   const router = useRouter();
@@ -14,12 +13,23 @@ export default function SessionTimeoutModal() {
   };
 
   return (
-    <Modal isOpen={isModalOpen} onClose={closeModal} isCentered>
+    <Modal
+      isOpen={isModalOpen}
+      onClose={closeModal}
+      isCentered
+      closeOnOverlayClick={false} // Prevent closing on overlay click
+      size="md" // Adjust size here
+    >
       <ModalOverlay />
       <ModalContent>
-        <ModalBody textAlign="center">
-          <Text>Dear user, session has timed out. Please login once again.</Text>
-          <Button mt={4} onClick={handleGoToLogin}>
+        <ModalBody textAlign="center" p={6}>
+            <Flex gap={'20px'} direction={'column'} w={'100%'} >
+                <Text fontSize="xl" fontWeight="medium">
+                Oops! 
+                </Text>
+                 <Text  fontSize="md">Session expired. Please log in to continue.                </Text>
+            </Flex>
+          <Button mt={5} colorScheme="blue" onClick={handleGoToLogin}>
             Go to Login
           </Button>
         </ModalBody>

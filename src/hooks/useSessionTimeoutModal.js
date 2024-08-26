@@ -1,10 +1,13 @@
+// hooks/useSessionTimeoutModal.js
 import { useSessionTimeout } from "../context/SessionTimeoutContext";
 import axios from "axios";
 
-export const useSessionTimeoutModal = (endpoint, method, data = null, headers = {}) => {
+export const useSessionTimeoutModal = (endpoint, method, headers = {}) => {
   const { openModal } = useSessionTimeout();
 
-  const fetchData = async () => {
+  const fetchData = async (data = null) => {
+    // console.log(data)
+    // console.log(headers)
     try {
       const response = await axios({
         method,

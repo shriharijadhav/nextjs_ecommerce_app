@@ -9,9 +9,10 @@ export  async function POST(req) {
   
    const reqBody = await req.json();
     const { landingPageUrl } = reqBody;
+    
 
     if (!landingPageUrl) {
-        return res.status(400).json({
+        return NextResponse.json({
             message: 'landingPageUrl is required',
             singleProductFetchSuccessful: false,
         });

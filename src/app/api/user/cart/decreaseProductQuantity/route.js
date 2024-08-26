@@ -62,7 +62,7 @@ export const POST =async (req)=> {
 
     // Ensure quantity doesn't go below 1
     if (existingProduct.quantity <= 1) {
-        return res.status(400).json({
+        return  NextResponse.json({
             newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
             message: 'Product quantity cannot be decreased below 1.',
             isProductQuantityDecreased: false,

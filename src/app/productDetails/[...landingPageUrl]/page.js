@@ -12,27 +12,27 @@ export default function ProductDetailCard({ params }) {
 
     const { landingPageUrl } = params;
     const formattedUrl = landingPageUrl.join('/');
+    console.log(formattedUrl)
+
 
     // Create hooks with endpoints
     const fetchProductData = useSessionTimeoutModal(
         'http://localhost:3000/api/product/getSingleProductDetails',
-        'POST',
-        { landingPageUrl: formattedUrl }
+        'POST'
     );
 
     const addProductToCart = useSessionTimeoutModal(
         'http://localhost:3000/api/user/cart/addProductToCart',
         'POST',
-        { productFromRequest: product },
         {
             'access-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM1OWEzZjRiMTY5ZWQ0N2EzMGY4ZmYiLCJpYXQiOjE3MjQyMjc4ODQsImV4cCI6MTcyNDMxNDI4NH0.rWONWUxFktAEy86dZ7zKQhz01cPQIAkShbK0u3eoEr8',
-            'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM1OWEzZjRiMTY5ZWQ0N2EzMGY4ZmYiLCJpYXQiOjE3MjQyMjc4ODQsImV4cCI6MTcyNDMxNDI4NH0.rWONWUxFktAEy86dZ7zKQhz01cPQIAkShbK0u3eoEr8'
+            'refresh-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODNhYWVlZWU5YzI0ZDZkNmNhNGQiLCJpYXQiOjE3MjQ2NjQ0MTEsImV4cCI6MTcyNDc1MDgxMX0.RvviiMYSqG-DoLgBWueladvZZbsgw2QMryWlrx0ia9I'
         }
     );
 
     const fetchSingleProductData = async () => {
         try {
-            const data = await fetchProductData();
+            const data = await fetchProductData( { landingPageUrl: formattedUrl });
             if (data) {
                 setProduct(data.product);
             }

@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 
 export default function ProductCard({ product }) {
   const router = useRouter();
-
   const handleCardClick = () => {
     router.push(`/productDetails/${product?.landingPageUrl}`);
   };

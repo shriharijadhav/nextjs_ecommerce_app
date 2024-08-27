@@ -50,7 +50,7 @@ export const POST = async (req) => {
            userId:userFromDB._id
         }
 
-        const accessToken = jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET, { expiresIn: '60s' });
+        const accessToken = jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET, { expiresIn: '2h' });
         const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d' });
 
 

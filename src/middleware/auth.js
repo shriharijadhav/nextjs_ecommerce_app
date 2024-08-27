@@ -77,7 +77,7 @@ async function handleExpiredAccessToken(req, refreshToken) {
         req.userId = decodedRefreshToken.userId;
 
         // Re-generate new access token
-        const newAccessToken = jwt.sign({ userId: decodedRefreshToken.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '60s' });
+        const newAccessToken = jwt.sign({ userId: decodedRefreshToken.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '2h' });
         
         req.newAccessToken = newAccessToken;
 

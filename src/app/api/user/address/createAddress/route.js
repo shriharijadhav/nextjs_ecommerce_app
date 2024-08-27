@@ -84,7 +84,7 @@ export const POST = async (req) => {
   });
 
   if (newAccessToken) {
-    // console.log('new access token sent over cookie')
+    console.log('new access token sent over cookie')
     response.cookies.set('access-token', newAccessToken, { httpOnly: true });
   }
 

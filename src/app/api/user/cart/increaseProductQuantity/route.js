@@ -1,14 +1,14 @@
-import checkIfUserIsLoggedIn from '@/middleware/auth';
+import axios from 'axios';
 import cartModel from '@/model/cartModel';
 import { NextResponse } from 'next/server';
 
-
-export const POST = async (req)=> {
-    
+export const POST = async (req) => {
     const reqBody = await req.json();
 
-    const accessToken = req.headers.get('access-token');
-    const refreshToken = req.headers.get('refresh-token');
+     // Extract tokens from cookies
+     const cookies = req.cookies;
+     const accessToken = cookies.get('access-token')?.value;
+     const refreshToken = cookies.get('refresh-token')?.value;
 
     if (!accessToken || !refreshToken) {
         return NextResponse.json({
@@ -18,23 +18,34 @@ export const POST = async (req)=> {
         });
     }
 
-    const isLoggedIn = await checkIfUserIsLoggedIn(reqBody, accessToken, refreshToken);
-    if (!isLoggedIn) {
+    // Check if the user is logged in by calling the checkSession API
+    const sessionResponse = await axios.post('http://localhost:3000/api/auth/checkSession', {}, {
+        headers: {
+            'access-token': accessToken,
+            'refresh-token': refreshToken,
+        },
+    });
+
+    const { isAuthenticated, newAccessToken, user } = sessionResponse.data;
+
+    if (!isAuthenticated) {
         return NextResponse.json({
-            message: 'Session timeout. Refresh token expired',
+            
+            message: 'Session timeout. Refresh token expired.',
             isRefreshTokenExpired: true,
             redirectUserToLogin: true,
             isProductQuantityIncreased: false,
         });
+
     }
 
     const { productId } = reqBody;
-    const userId = reqBody?.userId;
+    const userId = user?.userProfileInfo?.userId;
 
     if (!productId || !userId) {
         return NextResponse.json({
-            newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
-            message: 'Product details or user ID missing in request.',
+            
+            message: 'Product ID or user ID missing in request.',
             isProductQuantityIncreased: false,
         });
     }
@@ -42,8 +53,8 @@ export const POST = async (req)=> {
     const cart = await cartModel.findOne({ user: userId });
     if (!cart) {
         return NextResponse.json({
-            newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
-            message: 'Cart not found for user.',
+            
+            message: `Cart not found for user with id ${userId}.`,
             isProductQuantityIncreased: false,
         });
     }
@@ -54,21 +65,30 @@ export const POST = async (req)=> {
 
     if (!existingProduct) {
         return NextResponse.json({
-            newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
+            
             message: 'Product not found in cart.',
             isProductQuantityIncreased: false,
         });
     }
 
-    const updatedCart = await cartModel.updateOne(
+    // Increase product quantity
+    await cartModel.updateOne(
         { user: userId, 'allProductsInCart._id': existingProduct._id },
         { $inc: { 'allProductsInCart.$.quantity': 1 } },
         { new: true }
     );
 
-    return NextResponse.json({
-        newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
+    // Return response and set new access token if generated
+    const response = NextResponse.json({
+        
         message: 'Product quantity increased successfully.',
         isProductQuantityIncreased: true,
     });
-}
+
+    if (newAccessToken) {
+        console.log('New access token sent over cookie');
+        response.cookies.set('access-token', newAccessToken, { httpOnly: true });
+    }
+
+    return response;
+};

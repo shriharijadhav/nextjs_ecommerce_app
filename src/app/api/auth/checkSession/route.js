@@ -31,6 +31,7 @@ export const POST = async (req) => {
   }
 
   // Check if the user is logged in with the tokens
+//   const reqBody = await  req.json()
   const isLoggedIn = await checkIfUserIsLoggedIn(req, accessToken, refreshToken);
 
   // Respond based on login status

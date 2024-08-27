@@ -5,49 +5,31 @@ const cartModel = require('@/model/cartModel');
 const userModel = require('@/model/userModel');
 const jwt = require('jsonwebtoken');
 
-
 async function checkIfUserIsLoggedIn(req, accessToken, refreshToken) {
+    await dbConnect();
+
     try {
-        // Log the start time
-        await dbConnect();
+        const decodedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const userId = decodedRefreshToken?.userId;
 
-        const decodedRefreshToken_demo = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        const userId_temp = decodedRefreshToken_demo?.userId;
-
-        // check if user with id exists in database or not
-        let userFoundInDB = await userModel.findOne({_id: userId_temp});
+        // Check if the user exists in the database
+        const userFoundInDB = await userModel.findById(userId).lean();
         if (!userFoundInDB) {
-            return false
-        }else{
-            const userAddresses = await AddressModel.find({ user: userFoundInDB._id})
-            const userCart = await cartModel.findOne({ user: userFoundInDB._id})
-            const userProfileInfo = {
-                firstName:userFoundInDB.firstName,
-                lastName:userFoundInDB.lastName,
-                email:userFoundInDB.email,
-                contact:userFoundInDB.contact,
-                userId:userFoundInDB._id}
-            const userData = {
-                userProfileInfo,
-                userAddresses,
-                userCart
-            }
-            req.completeUserDetails = userData
+            return false; // User does not exist
         }
 
-        if (decodedRefreshToken_demo) {
-            // Check if the tokens are blacklisted
-            const blacklistedToken = await blacklistedTokenModel.findOne({
-                user: userId_temp,
-                accessToken: accessToken,
-                refreshToken: refreshToken
-            });
+        // Fetch user details and attach them to the request object
+        req.completeUserDetails = await fetchCompleteUserDetails(userFoundInDB);
 
+        // Check if the tokens are blacklisted
+        const blacklistedToken = await blacklistedTokenModel.findOne({
+            user: userId,
+            accessToken: accessToken,
+            refreshToken: refreshToken
+        }).lean();
 
-            if (blacklistedToken) {
-                
-                return false; // Tokens are blacklisted
-            }
+        if (blacklistedToken) {
+            return false; // Tokens are blacklisted
         }
 
         // Verify the access token
@@ -58,22 +40,52 @@ async function checkIfUserIsLoggedIn(req, accessToken, refreshToken) {
 
     } catch (err) {
         if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
-            try {
-                const decodedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-                req.userId = decodedRefreshToken.userId;
-
-                // Re-generate new access token
-                const payload = { userId: decodedRefreshToken.userId };
-                const newAccessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '2h' });
-                req.newAccessToken = newAccessToken;
-
-                return true; // Refresh token is valid
-
-            } catch (errRefreshToken) {
-                return false; // Refresh token is invalid or expired
-            }
+ 
+            console.log('access token expired..re-generating')
+            return await handleExpiredAccessToken(req, refreshToken);
         }
-        return false; // Access and refresh tokens are both invalid
+
+        console.error(`Authentication failed: ${err.message}`);
+        return false; // Other errors
+    }
+}
+
+// Helper function to fetch user details
+async function fetchCompleteUserDetails(user) {
+    const [userAddresses, userCart] = await Promise.all([
+        AddressModel.find({ user: user._id }).lean(),
+        cartModel.findOne({ user: user._id }).lean()
+    ]);
+
+    return {
+        userProfileInfo: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            contact: user.contact,
+            userId: user._id
+        },
+        userAddresses,
+        userCart
+    };
+}
+
+// Helper function to handle expired access token
+async function handleExpiredAccessToken(req, refreshToken) {
+    try {
+        const decodedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        req.userId = decodedRefreshToken.userId;
+
+        // Re-generate new access token
+        const newAccessToken = jwt.sign({ userId: decodedRefreshToken.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '2h' });
+        
+        req.newAccessToken = newAccessToken;
+
+        return true; // Refresh token is valid
+
+    } catch (err) {
+        console.error(`Refresh token failed: ${err.message}`);
+        return false; // Refresh token is invalid or expired
     }
 }
 

@@ -1,55 +1,82 @@
-
-
-import checkIfUserIsLoggedIn from "@/middleware/auth";
 import AddressModel from "@/model/addressModel";
 import { NextResponse } from "next/server";
+import axios from "axios";
 
-
-export const POST = async (req)=> {
-
+export const POST = async (req) => {
+    // Extract request body
     const reqBody = await req.json();
 
-    const accessToken = req.headers.get('access-token');
-    const refreshToken = req.headers.get('refresh-token');
+    // Extract cookies from the incoming request
+    const cookies = req.cookies;
+    const accessToken = cookies.get('access-token')?.value;
+    const refreshToken = cookies.get('refresh-token')?.value;
 
+    // Check if tokens are present
     if (!accessToken || !refreshToken) {
         return NextResponse.json({
             message: 'Tokens missing',
             redirectUserToLogin: true,
-            isProductQuantityIncreased: false,
+            isAddressDeleted: false,
         });
     }
 
-    const isLoggedIn = await checkIfUserIsLoggedIn(reqBody, accessToken, refreshToken);
-    if (!isLoggedIn) {
-        return  NextResponse.json({
-            newAccessToken: reqBody.newAccessToken ? reqBody.newAccessToken : null,
-            message: 'Session timeout. Refresh token expired',
+    // Call checkSession API to validate tokens
+    let sessionResponse;
+    try {
+        sessionResponse = await axios.post('http://localhost:3000/api/auth/checkSession', {}, {
+            headers: {
+                'access-token': accessToken,
+                'refresh-token': refreshToken,
+            },
+        });
+    } catch (error) {
+        return NextResponse.json({
+            message: 'Error validating session',
+            redirectUserToLogin: true,
+            isAddressDeleted: false,
+        });
+    }
+
+    const { isAuthenticated, newAccessToken, user } = sessionResponse.data;
+
+    if (!isAuthenticated) {
+        return NextResponse.json({
+            newAccessToken: newAccessToken || null,
+            message: 'Session timeout. Please log in again.',
             isRefreshTokenExpired: true,
             redirectUserToLogin: true,
-            isProductQuantityDecreased: false,
+            isAddressDeleted: false,
         });
     }
-    // logic for deleting address starts here
-    const {addressId} = reqBody;
-    let userId = reqBody?.userId;
-    if(!addressId || !userId) {
+
+    // Address deletion logic
+    const { addressId } = reqBody;
+    const userId = user.userProfileInfo.userId; // Extract userId from session data
+
+    // Validate addressId
+    if (!addressId) {
         return NextResponse.json({
-            newAccessToken:reqBody.newAccessToken ? reqBody.newAccessToken : null,
-            message:'Failed to delete Address.Address ID and User ID is required to delete a address.',
-            isAddressDeleted:false
+            newAccessToken: newAccessToken || null,
+            message: 'Failed to delete address. Address ID is required.',
+            isAddressDeleted: false,
         });
     }
 
-    const deletedAddress = await AddressModel.deleteOne({ _id: addressId, user: userId });
-   
+    // Attempt to delete the address
+    const result = await AddressModel.deleteOne({ _id: addressId, user: userId });
 
-    // logic for deleting address ends here   
-    
-    
-    return NextResponse.json({
-        newAccessToken:reqBody.newAccessToken ? reqBody.newAccessToken : null,
-        message:deletedAddress?'Address deleted successfully':'failed to delete the address with id'+addressId,
-        isAddressDeleted:true
+    // Return response
+    const response = NextResponse.json({
+        message: result.deletedCount > 0 
+            ? 'Address deleted successfully.' 
+            : `Failed to delete address with ID ${addressId}.`,
+        isAddressDeleted: result.deletedCount > 0,
     });
-}
+
+    // Set new access token if generated
+    if (newAccessToken) {
+        response.cookies.set('access-token', newAccessToken, { httpOnly: true });
+    }
+
+    return response;
+};

@@ -9,19 +9,21 @@ export const  POST = async (req)=> {
 
     try {
 
-        const reqBody = await req.json()
-        const { accessToken, refreshToken } = reqBody;
+       // Extract tokens from cookies
+    const cookies = req.cookies;
+    const accessToken = cookies.get('access-token')?.value;
+    const refreshToken = cookies.get('refresh-token')?.value;
 
-        if(!accessToken|| !refreshToken ){
-            return NextResponse.json({
-                message: 'failed to logout',
-                isUserLoggedOut: false,
-                redirectUserToLogin: false,
-            });  
-        }
+    if (!accessToken || !refreshToken) {
+        return NextResponse.json({
+            message: 'Tokens missing',
+            redirectUserToLogin: true,
+            isCartDataFetched: false,
+        });
+    }
 
 
-        const isLoggedIn = await checkIfUserIsLoggedIn(reqBody, accessToken, refreshToken);
+        const isLoggedIn = await checkIfUserIsLoggedIn(req, accessToken, refreshToken);
 
         if (!isLoggedIn) {
             return NextResponse.json({
@@ -32,7 +34,7 @@ export const  POST = async (req)=> {
             });
         }
 
-        const userId = reqBody?.userId;
+        const userId = req?.userId;
 
         const blacklistedToken = await blacklistedTokenModel.create({
             accessToken: accessToken,
@@ -41,11 +43,19 @@ export const  POST = async (req)=> {
         });
 
         if (blacklistedToken) {
-            return NextResponse.json({
-                message: 'User logged out successfully',
-                isUserLoggedOut: true,
-                redirectUserToLogin: true,
-            });
+            // Create the response object
+        const response = NextResponse.json({
+            message: 'User logged out successfully',
+            isUserLoggedOut: true,
+            redirectUserToLogin: true,
+        });
+
+        // Delete the 'access-token' and 'refresh-token' cookies by setting them to expire immediately
+        response.cookies.set('access-token', '', { expires: new Date(0), httpOnly: true });
+        response.cookies.set('refresh-token', '', { expires: new Date(0), httpOnly: true });
+
+        return response;
+
         }
 
     } catch (error) {
